@@ -15,9 +15,10 @@ app.use(express.json());
 // mongodb connection
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dangeag.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -29,6 +30,15 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     
+    const jobsCollection = await client.db('soloSphrere').collection('jobs');
+    // const bidsCollection = await client.db('soloSphere').collection('bids');
+    
+
+
+    app.get('/jobs', async (req, res) => {
+        const result = await jobsCollection.find().toArray();
+        res.send(result);
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
