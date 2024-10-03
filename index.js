@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -30,6 +31,17 @@ async function run() {
   try {
     const jobsCollection = await client.db("soloSphrere").collection("jobs");
     const bidsCollection = await client.db("soloSphrere").collection("bids");
+
+
+    // jwt genarate
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.SECRET_KEY, {
+        expiresIn: '365d',
+      });
+      res.send(token);
+    })
+
 
     // get all data from DB ---------
     app.get("/jobs", async (req, res) => {
