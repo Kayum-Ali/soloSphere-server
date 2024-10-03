@@ -4,12 +4,12 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
 
-// const corsOptions = {
-//     origin: ['http://localhost:5173', 'http://localhost:5174'],
-//     credentials: true,
-//     optionsSuccessStatus: 200
-// }
-app.use(cors());
+const corsOptions = {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // mongodb connection
@@ -63,7 +63,7 @@ async function run() {
       const email = req.params.email;
       const query = {'buyer.email': email};
       const result = await jobsCollection.find(query).toArray();
-      console.log(result)
+      // console.log(result)
       res.send(result);
     });
     // single job delete
@@ -87,6 +87,36 @@ async function run() {
       const result = await jobsCollection.updateOne(query, updatedDoc,options);
       res.send(result);
     });
+
+
+
+    // get all bids from a user by email from db
+    app.get("/my-bids/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email};
+      const result = await bidsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
+    app.get("/bid-request/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { 'buyer.email':email};
+      const result = await bidsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // update bid status
+    app.patch("/update-status/:id", async(req, res) => {
+      const id = req.params.id;
+      const updatedStatus = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {...updatedStatus},
+      }
+      const result = await bidsCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
