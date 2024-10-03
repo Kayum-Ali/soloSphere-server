@@ -13,6 +13,7 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
 
 // mongodb connection
 
@@ -90,6 +91,17 @@ async function run() {
 
     // get all job posted by specific user
     app.get("/jobs/:email", async (req, res) => {
+      const token = req.cookies?.token;
+      if(token){
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
+          if(err){
+            res.send({error: 'Token expired'})
+          }else{
+            res.send(decoded)
+          }
+        })
+      }
+      console.log(token)
       const email = req.params.email;
       const query = {'buyer.email': email};
       const result = await jobsCollection.find(query).toArray();
