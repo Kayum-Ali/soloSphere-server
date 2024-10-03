@@ -15,6 +15,21 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser())
 
+// verify jwt middleware
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).send({ message: 'UnAuthoriza access' });
+
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'Invalid token' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 // mongodb connection
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -90,19 +105,13 @@ async function run() {
     });
 
     // get all job posted by specific user
-    app.get("/jobs/:email", async (req, res) => {
-      const token = req.cookies?.token;
-      if(token){
-        jwt.verify(token, process.env.SECRET_KEY, (err, decoded)=>{
-          if(err){
-            res.send({error: 'Token expired'})
-          }else{
-            res.send(decoded)
-          }
-        })
-      }
-      console.log(token)
+    app.get("/jobs/:email", verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
       const email = req.params.email;
+      if (tokenEmail !== email){
+        return res.status(403).send({ message: 'forbidden  access' });
+      }
+     
       const query = {'buyer.email': email};
       const result = await jobsCollection.find(query).toArray();
       // console.log(result)
@@ -133,7 +142,7 @@ async function run() {
 
 
     // get all bids from a user by email from db
-    app.get("/my-bids/:email", async (req, res) => {
+    app.get("/my-bids/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email};
       const result = await bidsCollection.find(query).toArray();
@@ -141,7 +150,7 @@ async function run() {
     });
 
 
-    app.get("/bid-request/:email", async (req, res) => {
+    app.get("/bid-request/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { 'buyer.email':email};
       const result = await bidsCollection.find(query).toArray();
