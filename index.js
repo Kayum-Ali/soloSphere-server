@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
@@ -31,6 +32,7 @@ async function run() {
   try {
     const jobsCollection = await client.db("soloSphrere").collection("jobs");
     const bidsCollection = await client.db("soloSphrere").collection("bids");
+    
 
 
     // jwt genarate
@@ -39,8 +41,24 @@ async function run() {
       const token = jwt.sign(user, process.env.SECRET_KEY, {
         expiresIn: '365d',
       });
-      res.send(token);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      }).send({success: true});
+      console.log(token)
     })
+
+    // clear cookie in logout
+    app.get('/logout', (req, res) => {
+      res.clearCookie('token',{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        maxAge: 0,
+
+      }).send({ success: true });
+    });
 
 
     // get all data from DB ---------
