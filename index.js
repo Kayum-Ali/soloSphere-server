@@ -30,6 +30,7 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+
 // mongodb connection
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -94,6 +95,15 @@ async function run() {
     // save a bid data in database
     app.post("/bid", async (req, res) => {
       const bidData = req.body;
+      const query = {
+        email : bidData.email,
+        jobId : bidData.jobId,
+      
+      }
+      const alreadyApplied = await bidsCollection.findOne(query);
+      if(alreadyApplied){
+        return res.status(400).send({ message: 'already applied for this job' });
+      }
       const result = await bidsCollection.insertOne(bidData);
       res.send(result);
     });
@@ -168,6 +178,22 @@ async function run() {
       const result = await bidsCollection.updateOne(query, updatedDoc);
       res.send(result);
     })
+
+
+      // get all data from DB pagination---------
+      app.get("/all-jobs", async (req, res) => {
+        const page = parseInt(req.query.page) - 1;
+        const size = parseInt(req.query.size);
+        console.log(page, size)
+        const result = await jobsCollection.find().skip(page* size).limit(size).toArray();
+        res.send(result);
+      });
+
+        // get all data from DB ---------
+    app.get("/jobs-count", async (req, res) => {
+      const count = await jobsCollection.countDocuments()
+      res.send({count});
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
