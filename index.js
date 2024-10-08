@@ -182,16 +182,29 @@ async function run() {
 
       // get all data from DB pagination---------
       app.get("/all-jobs", async (req, res) => {
-        const page = parseInt(req.query.page) - 1;
+        const page = parseInt(req.query.page) -1;
         const size = parseInt(req.query.size);
+        const filter = req.query.filter;
+        const sort = req.query.sort;
+        let query = {};
+        if (filter) {
+          query = {category: filter};
+        }
+        let options = {}
+        if(sort) options = {sort: {deadline : sort === 'asc' ? 1: -1}}
         console.log(page, size)
-        const result = await jobsCollection.find().skip(page* size).limit(size).toArray();
+        const result = await jobsCollection.find(query,options).skip(page* size).limit(size).toArray();
         res.send(result);
       });
 
         // get all data from DB ---------
     app.get("/jobs-count", async (req, res) => {
-      const count = await jobsCollection.countDocuments()
+      const filter = req.query.filter;
+      let query = {};
+      if (filter) {
+        query = {category: filter};
+      }
+      const count = await jobsCollection.countDocuments(query)
       res.send({count});
     });
     // Send a ping to confirm a successful connection
