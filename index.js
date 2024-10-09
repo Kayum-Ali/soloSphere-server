@@ -11,7 +11,7 @@ const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://solosphere-d8c6e.web.app/',
+    'https://solosphere-d8c6e.web.app',
   ],
   credentials: true,
   optionSuccessStatus: 200,
